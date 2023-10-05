@@ -54,11 +54,11 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    sourceSets {
-        main {
-            jniLibs.srcDirs = ['src/main/cpp/libyuv/libs']
-        }
-    }
+//    sourceSets {
+//        main {
+//            jniLibs.srcDirs = ['src/main/cpp/libyuv/libs']
+//        }
+//    }
     externalNativeBuild {
         cmake {
             path file('src/main/cpp/CMakeLists.txt')
