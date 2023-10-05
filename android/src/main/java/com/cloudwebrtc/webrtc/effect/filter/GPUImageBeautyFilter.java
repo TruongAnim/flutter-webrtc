@@ -132,9 +132,9 @@ public class GPUImageBeautyFilter extends GPUImageFilter {
         brightnessLocation = GLES20.glGetUniformLocation(getProgram(), "brightness");
         singleStepOffsetLocation = GLES20.glGetUniformLocation(getProgram(), "singleStepOffset");
 
-        toneLevel = 0.60f;
-        beautyLevel = 0.60f;
-        brightLevel = 0.50f;
+        toneLevel = 0.47f;
+        beautyLevel = 0.42f;
+        brightLevel = 0.34f;
 
         setParams(beautyLevel, toneLevel);
         setBrightLevel(brightLevel);

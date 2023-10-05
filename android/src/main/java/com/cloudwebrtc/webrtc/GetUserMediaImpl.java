@@ -117,7 +117,7 @@ class GetUserMediaImpl {
     private final SparseArray<MediaRecorderImpl> mediaRecorders = new SparseArray<>();
     private AudioDeviceInfo preferredInput = null;
     private boolean isTorchOn;
-    private boolean beautyConfigEnable;
+    private boolean beautyConfigEnable = true;
 
     private RTCVideoEffector rtcVideoEffector;
     private GPUImageBeautyFilter gpuImageBeautyFilter;
