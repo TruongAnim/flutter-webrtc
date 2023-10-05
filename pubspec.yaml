@@ -14,6 +14,9 @@ dependencies:
   path_provider: ^2.0.2
   webrtc_interface: 1.1.2
 
+dependency_overrides:
+  collection: ^1.17.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
