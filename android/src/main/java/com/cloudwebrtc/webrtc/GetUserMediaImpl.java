@@ -38,6 +38,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.cloudwebrtc.webrtc.audio.AudioSwitchManager;
+import com.cloudwebrtc.webrtc.effect.RTCVideoEffector;
+import com.cloudwebrtc.webrtc.effect.VideoEffectProcessor;
+import com.cloudwebrtc.webrtc.effect.filter.GPUImageBeautyFilter;
 import com.cloudwebrtc.webrtc.record.AudioChannel;
 import com.cloudwebrtc.webrtc.record.AudioSamplesInterceptor;
 import com.cloudwebrtc.webrtc.record.MediaRecorderImpl;
@@ -75,6 +78,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import io.flutter.plugin.common.MethodChannel.Result;
 
@@ -112,6 +117,12 @@ class GetUserMediaImpl {
     private final SparseArray<MediaRecorderImpl> mediaRecorders = new SparseArray<>();
     private AudioDeviceInfo preferredInput = null;
     private boolean isTorchOn;
+    private boolean beautyConfigEnable;
+
+    private RTCVideoEffector rtcVideoEffector;
+    private GPUImageBeautyFilter gpuImageBeautyFilter;
+    private VideoEffectProcessor mVideoEffectProcessor;
+    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public void screenRequestPermissions(ResultReceiver resultReceiver) {
         final Activity activity = stateProvider.getActivity();
@@ -678,6 +689,26 @@ class GetUserMediaImpl {
         return null;
     }
 
+    public void toggleBeautyEffect() {
+        executor.execute(() -> {
+            if (rtcVideoEffector != null) {
+                if (rtcVideoEffector.isEnabled()) {
+                    rtcVideoEffector.disable();
+                } else {
+                    rtcVideoEffector.enable();
+                }
+
+            }
+        });
+    }
+
+    private void initBeautyFilter(SurfaceTextureHelper surfaceTextureHelper){
+        rtcVideoEffector = new RTCVideoEffector();
+        gpuImageBeautyFilter = new GPUImageBeautyFilter();
+        rtcVideoEffector.addGPUImageFilter(gpuImageBeautyFilter);
+        mVideoEffectProcessor = new VideoEffectProcessor(surfaceTextureHelper, rtcVideoEffector);
+    }
+
     private ConstraintsMap getUserVideo(ConstraintsMap constraints, MediaStream mediaStream) {
         ConstraintsMap videoConstraintsMap = null;
         ConstraintsMap videoConstraintsMandatory = null;
@@ -699,7 +730,7 @@ class GetUserMediaImpl {
         // TODO Enable camera2 enumerator
         CameraEnumerator cameraEnumerator;
 
-        if (Camera2Enumerator.isSupported(applicationContext)) {
+        if (Camera2Enumerator.isSupported(applicationContext) && !beautyConfigEnable) {
             Log.d(TAG, "Creating video capturer using Camera2 API.");
             cameraEnumerator = new Camera2Enumerator(applicationContext);
         } else {
@@ -728,6 +759,12 @@ class GetUserMediaImpl {
         String threadName = Thread.currentThread().getName() + "_texture_camera_thread";
         SurfaceTextureHelper surfaceTextureHelper =
                 SurfaceTextureHelper.create(threadName, EglUtils.getRootEglBaseContext());
+
+        if(beautyConfigEnable){
+            initBeautyFilter(surfaceTextureHelper);
+            videoSource.setVideoProcessor(mVideoEffectProcessor);
+        }
+
         videoCapturer.initialize(
                 surfaceTextureHelper, applicationContext, videoSource.getCapturerObserver());
 
@@ -813,7 +850,14 @@ class GetUserMediaImpl {
     void removeVideoCapturer(String id) {
         new Thread(() -> {
             removeVideoCapturerSync(id);
+            dispose();
         }).start();
+    }
+
+    void dispose(){
+        if (mVideoEffectProcessor != null) {
+            mVideoEffectProcessor.dispose();
+        }
     }
 
     @RequiresApi(api = VERSION_CODES.M)
@@ -867,7 +911,7 @@ class GetUserMediaImpl {
 
         CameraEnumerator cameraEnumerator;
 
-        if (Camera2Enumerator.isSupported(applicationContext)) {
+        if (Camera2Enumerator.isSupported(applicationContext) && !beautyConfigEnable) {
             Log.d(TAG, "Creating video capturer using Camera2 API.");
             cameraEnumerator = new Camera2Enumerator(applicationContext);
         } else {
@@ -1058,7 +1102,7 @@ class GetUserMediaImpl {
 
                 final double desiredZoomLevel = Math.max(1.0, Math.min(zoomLevel, maxZoomLevel));
 
-                float ratio = 1.0f / (float)desiredZoomLevel;
+                float ratio = 1.0f / (float) desiredZoomLevel;
 
                 if (rect != null) {
                     int croppedWidth = rect.width() - Math.round((float) rect.width() * ratio);
