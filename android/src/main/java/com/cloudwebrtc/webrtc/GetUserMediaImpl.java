@@ -702,6 +702,10 @@ class GetUserMediaImpl {
         });
     }
 
+    public GPUImageBeautyFilter getGpuImageBeautyFilter() {
+        return gpuImageBeautyFilter;
+    }
+
     private void initBeautyFilter(SurfaceTextureHelper surfaceTextureHelper){
         rtcVideoEffector = new RTCVideoEffector();
         gpuImageBeautyFilter = new GPUImageBeautyFilter();

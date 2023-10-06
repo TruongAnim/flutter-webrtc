@@ -140,6 +140,29 @@ public class GPUImageBeautyFilter extends GPUImageFilter {
         setBrightLevel(brightLevel);
     }
 
+    public void setEnableFilter(boolean enableFilter) {
+        if (enableFilter) {
+            setParams(beautyLevel, toneLevel);
+            setBrightLevel(brightLevel);
+        } else {
+            setParams(0, 0);
+            setBrightLevel(0);
+        }
+    }
+
+    public void setFilterParams(float[] params) {
+        this.toneLevel = params[0];
+        this.beautyLevel = params[1];
+        this.brightLevel = params[2];
+        setParams(beautyLevel, toneLevel);
+        setBrightLevel(brightLevel);
+    }
+
+    public void setToneLevel(float toneLevel) {
+        this.toneLevel = toneLevel;
+        setParams(beautyLevel, toneLevel);
+    }
+
     public void setBeautyLevel(float beautyLevel) {
         this.beautyLevel = beautyLevel;
         setParams(beautyLevel, toneLevel);
@@ -160,7 +183,7 @@ public class GPUImageBeautyFilter extends GPUImageFilter {
     }
 
     private void setTexelSize(final float w, final float h) {
-        setFloatVec2(singleStepOffsetLocation, new float[] {2.0f / w, 2.0f / h});
+        setFloatVec2(singleStepOffsetLocation, new float[]{2.0f / w, 2.0f / h});
     }
 
     @Override
